@@ -8,12 +8,10 @@ async function obtenerPais(nombre) {
     try {
         // Llamada a la API codificando el nombre del país
         const respuesta = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(nombre)}`);
-
         // Si la respuesta no es correcta retornamos null
         if (!respuesta.ok) {
             return null;
         }
-
         // Convertimos la respuesta a JSON y obtenemos el primer elemento
         const datos = await respuesta.json();
         return Array.isArray(datos) && datos.length ? datos[0] : null;
@@ -23,29 +21,26 @@ async function obtenerPais(nombre) {
         return null;
     }
 }
-
 /**
- * Obtiene el nombre ingresado por el usuario y muestra la información
- * del país en la página.
+ * Obtiene el nombre ingresado por el usuario y muestra la información del país en la página.
  */
 async function mostrarInformacion() {
     const input = document.getElementById('countryInput');
     const infoDiv = document.getElementById('countryInfo');
     const nombre = input.value.trim();
 
-    // Validación simple del campo de texto
+    // Validación simple del campo de texto, asegurando que no esté vacío
     if (!nombre) {
         infoDiv.innerHTML = '<div class="alert alert-warning">Ingrese un país válido.</div>';
         return;
     }
-
     // Consultamos la API para obtener los datos del país
+    // Si el pais no existe, mostramos un mensaje de advertencia
     const pais = await obtenerPais(nombre);
     if (!pais) {
         infoDiv.innerHTML = '<div class="alert alert-warning">País no encontrado</div>';
         return;
     }
-
     // Preparamos los datos que vamos a mostrar en la tabla
     const datos = {
         nombre: pais.name.common,
@@ -55,7 +50,6 @@ async function mostrarInformacion() {
         bandera: pais.flags && pais.flags.png ? pais.flags.png : '',
         idioma: pais.languages ? Object.values(pais.languages).join(', ') : 'N/A'
     };
-
     // Generamos el HTML con la información del país
     infoDiv.innerHTML = `
         <table class="table table-bordered">
@@ -68,7 +62,6 @@ async function mostrarInformacion() {
         </table>
     `;
 }
-
 // Cuando el documento esté listo añadimos el evento al botón
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('showInfo').addEventListener('click', mostrarInformacion);

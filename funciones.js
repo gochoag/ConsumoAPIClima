@@ -1,37 +1,42 @@
-async function cargarPaises() {
+async function obtenerPais(nombre) {
     try {
-        const respuesta = await fetch('https://restcountries.com/v3.1/all');
+        const respuesta = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(nombre)}`);
+        if (!respuesta.ok) {
+            return null;
+        }
         const datos = await respuesta.json();
-        const select = document.getElementById('countrySelect');
-        datos.sort((a, b) => a.name.common.localeCompare(b.name.common));
-        datos.forEach(pais => {
-            const option = document.createElement('option');
-            option.value = pais.cca3;
-            option.textContent = pais.name.common;
-            option.dataset.info = JSON.stringify({
-                nombre: pais.name.common,
-                capital: pais.capital ? pais.capital[0] : 'N/A',
-                region: pais.region,
-                poblacion: pais.population,
-                bandera: pais.flags && pais.flags.png ? pais.flags.png : '',
-                idioma: pais.languages ? Object.values(pais.languages).join(', ') : 'N/A'
-            });
-            select.appendChild(option);
-        });
+        return Array.isArray(datos) && datos.length ? datos[0] : null;
     } catch (e) {
-        console.error('Error al cargar países:', e);
+        console.error('Error al consultar país:', e);
+        return null;
     }
 }
 
-function mostrarInformacion() {
-    const select = document.getElementById('countrySelect');
+async function mostrarInformacion() {
+    const input = document.getElementById('countryInput');
     const infoDiv = document.getElementById('countryInfo');
-    const opcion = select.options[select.selectedIndex];
-    if (!opcion || !opcion.dataset.info) {
-        infoDiv.innerHTML = '<div class="alert alert-warning">Seleccione un país válido.</div>';
+    const nombre = input.value.trim();
+
+    if (!nombre) {
+        infoDiv.innerHTML = '<div class="alert alert-warning">Ingrese un país válido.</div>';
         return;
     }
-    const datos = JSON.parse(opcion.dataset.info);
+
+    const pais = await obtenerPais(nombre);
+    if (!pais) {
+        infoDiv.innerHTML = '<div class="alert alert-warning">País no encontrado</div>';
+        return;
+    }
+
+    const datos = {
+        nombre: pais.name.common,
+        capital: pais.capital ? pais.capital[0] : 'N/A',
+        region: pais.region,
+        poblacion: pais.population,
+        bandera: pais.flags && pais.flags.png ? pais.flags.png : '',
+        idioma: pais.languages ? Object.values(pais.languages).join(', ') : 'N/A'
+    };
+
     infoDiv.innerHTML = `
         <table class="table table-bordered">
             <tr><th>Nombre</th><td>${datos.nombre}</td></tr>
@@ -45,6 +50,5 @@ function mostrarInformacion() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    cargarPaises();
     document.getElementById('showInfo').addEventListener('click', mostrarInformacion);
 });
